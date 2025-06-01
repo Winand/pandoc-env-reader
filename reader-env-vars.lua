@@ -102,8 +102,8 @@ function replace_var(expr)
     local name, default = expr:match(patterns.default)
     if name then return Var_default(name, default) end
     -- Return a specified value if a variable is defined
-    local name, default = expr:match(patterns.if_defined)
-    if name then return Var_if_defined(name, default) end
+    local name, value = expr:match(patterns.if_defined)
+    if name then return Var_if_defined(name, value) end
     -- Substring Expansion
     local name, offset, length = expr:match(patterns.substring)
     if name then return Var_substring(name, offset, length) end
