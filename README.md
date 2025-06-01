@@ -13,5 +13,5 @@ It also supports a subset of the Bash parameter expansion features:
 - default value: `{{UNSET:-default val}}`
 - if defined: `{{defined:+value}}`
 - substring: `{{name:3:5}}`
-- length, prefix/suffix removal, substring replacement,
-upper/lower case conversion (see also _input.md_)
+- substring replacement: `{{string//%d/*}}` (supports Lua patterns)
+- length, prefix/suffix removal, upper/lower case conversion (see also _input.md_)

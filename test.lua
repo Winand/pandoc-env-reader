@@ -30,7 +30,9 @@ local testcases = {
     ["string%abcdefgh"] = "01234567890",  -- remove suffix
     ["string^^"] = "01234567890ABCDEFGH",  -- upper case
     ["string/0/o"] = "o1234567890abcdefgh",  -- replace first
+    ["string/%a+/<letters>"] = "01234567890<letters>",  -- replace using Lua pattern
     ["string//0/o"] = "o123456789oabcdefgh",  -- replace all
+    ["string//%d/*"] = "***********abcdefgh",  -- replace all using Lua pattern
 }
 
 for expr, expected in pairs(testcases) do

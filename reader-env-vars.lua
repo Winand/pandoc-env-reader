@@ -88,7 +88,7 @@ local function Var_lowercase(name, all)
 end
 
 local function Var_replace(name, old, new, all)
-    -- Replace substring
+    -- Replace substring (Lua patterns supported)
     local val = os.getenv(name)
     if not val then return end
     if all and all ~= "" then return val:gsub(old, new) end
