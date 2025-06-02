@@ -72,21 +72,17 @@ local function Var_length(name, index)
 end
 
 local function Var_remove_prefix(name, index, prefix)
-    -- Remove prefix (does not support patterns!)
+    -- Remove prefix (Lua patterns supported)
     local val = getenv(name, index)
     if not val then return end
-    if val:sub(1, #prefix) == prefix then
-        return val:sub(#prefix + 1) end
-    return val
+    return val:gsub("^"..prefix, "", 1)
 end
 
 local function Var_remove_suffix(name, index, suffix)
-    -- Remove suffix (does not support patterns!)
+    -- Remove suffix (Lua patterns supported)
     local val = getenv(name, index)
     if not val then return end
-    if val:sub(-#suffix) == suffix then
-        return val:sub(1, #val - #suffix) end
-    return val
+    return val:gsub(suffix.."$", "", 1)
 end
 
 local function Var_uppercase(name, index, all)
