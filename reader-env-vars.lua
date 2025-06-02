@@ -91,8 +91,8 @@ local function Var_replace(name, old, new, all)
     -- Replace substring (Lua patterns supported)
     local val = os.getenv(name)
     if not val then return end
-    if all and all ~= "" then return val:gsub(old, new) end
-    return val:gsub(old, new, 1)
+    if all and all ~= "" then return (val:gsub(old, new)) end
+    return (val:gsub(old, new, 1))  -- parentheses force to return only the first value
 end
 
 function replace_var(expr)
