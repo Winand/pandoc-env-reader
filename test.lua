@@ -4,6 +4,7 @@
 
     Set environment variables before running tests:
     $env:string="01234567890abcdefgh"
+    $env:arr=123, 456, "abcd", "EFGHe"
 ]]
 
 dofile("reader-env-vars.lua")
@@ -33,11 +34,26 @@ local testcases = {
     ["string/%a+/<letters>"] = "01234567890<letters>",  -- replace using Lua pattern
     ["string//0/o"] = "o123456789oabcdefgh",  -- replace all
     ["string//%d/*"] = "***********abcdefgh",  -- replace all using Lua pattern
+    -- arrays
+    ["arr[2]:1:2"] = "bc",  -- substring
+    ["arr[4]:-100"] = "100",  -- default
+    ["arr[1]:+100"] = "100",  -- if defined
+    ["#arr[0]"] = 3,  -- length
+    ["#arr"] = 18,  -- array is a space-separated string
+    ["arr[2]#ab"] = "cd",  -- remove prefix
+    ["arr[2]%cd"] = "ab",  -- remove suffix
+    ["arr[2]^"] = "Abcd",  -- upper case first letter
+    ["arr[2]^^"] = "ABCD",  -- upper case
+    ["arr[3],"] = "eFGHe",  -- lower case first letter
+    ["arr[3],,"] = "efghe",  -- lower case
+    ["arr[1]/./A"] = "A56",  -- replace using Lua pattern
+    ["arr[3]//[eE]/.."] = "..FGH..",  -- replace all using Lua pattern
 }
 
 for expr, expected in pairs(testcases) do
     local result = replace_var(expr)
-    assert(result == expected, "Expected '" .. expected .. "' for '" .. expr .. "', got '" .. result .. "'")
+    assert(result == expected, "Expected '" .. expected .. "' for '" .. expr ..
+                               "', got '" .. tostring(result) .. "'")
 end
 
 print("All tests passed.")

@@ -14,4 +14,5 @@ It also supports a subset of the Bash parameter expansion features:
 - if defined: `{{defined:+value}}`
 - substring: `{{name:3:5}}`
 - substring replacement: `{{string//%d/*}}` (supports Lua patterns)
+- array indexing: `{{array[1]}}`
 - length, prefix/suffix removal, upper/lower case conversion (see also _input.md_)

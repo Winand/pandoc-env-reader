@@ -3,35 +3,53 @@
     Lua string utils https://gist.github.com/kgriffs/124aae3ac80eefe57199451b823c24ec
 ]]
 
+local name = "([%w_]-)%[?(-?%d*)%]?"  -- VAR or VAR[0]
 local patterns = {
-    default = "^([%w_]-):%-(.+)$",
-    if_defined = "^([%w_]-):%+(.+)$",
-    substring = "^([%w_]-):%s*(-?%d*):?%s*(-?%d*)$",
-    length = "^#([%w_]-)$",
-    prefix = "^([%w_]-)#(.+)$",
-    suffix = "^([%w_]-)%%(.+)$",
-    uppercase = "^([%w_]-)%^(%^?)$",
-    lowercase = "^([%w_]-),(,?)$",
-    replace = "^([%w_]-)/(/?)(.-)/(.+)$",
+    default = "^"..name..":%-(.+)$",
+    if_defined = "^"..name..":%+(.+)$",
+    substring = "^"..name..":%s*(-?%d*):?%s*(-?%d*)$",
+    length = "^#"..name.."$",
+    prefix = "^"..name.."#(.+)$",
+    suffix = "^"..name.."%%(.+)$",
+    uppercase = "^"..name.."%^(%^?)$",
+    lowercase = "^"..name..",(,?)$",
+    replace = "^"..name.."/(/?)(.-)/(.+)$",
 }
 
-local function Var_default(name, default)
-    -- Default value
+local function getenv(name, index)
+    -- get environment variable by name
+    -- supports space separated arrays
     local val = os.getenv(name)
+    if not val then return end
+
+    if not index or index == '' then return val end
+    index = math.tointeger(index)
+    assert(index, "index is not an integer")
+
+    local i = 0
+    for item in val:gmatch("%S+") do
+        if i == index then return item end
+        i = i + 1
+    end
+end
+
+local function Var_default(name, index, default)
+    -- Default value
+    local val = getenv(name, index)
     if not val then return default end
     return val
 end
 
-local function Var_if_defined(name, value)
+local function Var_if_defined(name, index, value)
     -- Return a specified value if a variable is defined
-    if os.getenv(name) then return value end
+    if getenv(name, index) then return value end
     return ""
 end
 
-local function Var_substring(name, offset, length)
+local function Var_substring(name, index, offset, length)
     -- Substring Expansion
     -- https://unix.stackexchange.com/q/144298
-    local val = os.getenv(name)
+    local val = getenv(name, index)
     if not val then return end
 
     if not offset or offset == '' then offset = 0 else offset = math.tointeger(offset) end
@@ -46,50 +64,50 @@ local function Var_substring(name, offset, length)
     return result
 end
 
-local function Var_length(name)
+local function Var_length(name, index)
     -- Length of a variable value
-    local val = os.getenv(name)
+    local val = getenv(name, index)
     if not val then return 0 end
     return #val
 end
 
-local function Var_remove_prefix(name, prefix)
+local function Var_remove_prefix(name, index, prefix)
     -- Remove prefix (does not support patterns!)
-    local val = os.getenv(name)
+    local val = getenv(name, index)
     if not val then return end
     if val:sub(1, #prefix) == prefix then
         return val:sub(#prefix + 1) end
     return val
 end
 
-local function Var_remove_suffix(name, suffix)
+local function Var_remove_suffix(name, index, suffix)
     -- Remove suffix (does not support patterns!)
-    local val = os.getenv(name)
+    local val = getenv(name, index)
     if not val then return end
     if val:sub(-#suffix) == suffix then
         return val:sub(1, #val - #suffix) end
     return val
 end
 
-local function Var_uppercase(name, all)
+local function Var_uppercase(name, index, all)
     -- Convert first or all characters to upper case (does not support patterns!)
-    local val = os.getenv(name)
+    local val = getenv(name, index)
     if not val then return end
     if all and all ~= "" then return val:upper() end
     return val:sub(1, 1):upper() .. val:sub(2)
 end
 
-local function Var_lowercase(name, all)
+local function Var_lowercase(name, index, all)
     -- Convert first or all characters to lower case (does not support patterns!)
-    local val = os.getenv(name)
+    local val = getenv(name, index)
     if not val then return end
     if all and all ~= "" then return val:lower() end
     return val:sub(1, 1):lower() .. val:sub(2)
 end
 
-local function Var_replace(name, old, new, all)
+local function Var_replace(name, index, old, new, all)
     -- Replace substring (Lua patterns supported)
-    local val = os.getenv(name)
+    local val = getenv(name, index)
     if not val then return end
     if all and all ~= "" then return (val:gsub(old, new)) end
     return (val:gsub(old, new, 1))  -- parentheses force to return only the first value
@@ -99,32 +117,32 @@ function replace_var(expr)
     -- Match and replace a single template field
 
     -- Default value (!! should go earlier than a substring match)
-    local name, default = expr:match(patterns.default)
-    if name then return Var_default(name, default) end
+    local name, idx, default = expr:match(patterns.default)
+    if name then return Var_default(name, idx, default) end
     -- Return a specified value if a variable is defined
-    local name, value = expr:match(patterns.if_defined)
-    if name then return Var_if_defined(name, value) end
+    local name, idx, value = expr:match(patterns.if_defined)
+    if name then return Var_if_defined(name, idx, value) end
     -- Substring Expansion
-    local name, offset, length = expr:match(patterns.substring)
-    if name then return Var_substring(name, offset, length) end
+    local name, idx, offset, length = expr:match(patterns.substring)
+    if name then return Var_substring(name, idx, offset, length) end
     -- Variable length
-    local name = expr:match(patterns.length)
-    if name then return Var_length(name) end
+    local name, idx = expr:match(patterns.length)
+    if name then return Var_length(name, idx) end
     -- Remove prefix
-    local name, prefix = expr:match(patterns.prefix)
-    if name then return Var_remove_prefix(name, prefix) end
+    local name, idx, prefix = expr:match(patterns.prefix)
+    if name then return Var_remove_prefix(name, idx, prefix) end
     -- Remove suffix
-    local name, suffix = expr:match(patterns.suffix)
-    if name then return Var_remove_suffix(name, suffix) end
+    local name, idx, suffix = expr:match(patterns.suffix)
+    if name then return Var_remove_suffix(name, idx, suffix) end
     -- Upper case
-    local name, all = expr:match(patterns.uppercase)
-    if name then return Var_uppercase(name, all) end
+    local name, idx, all = expr:match(patterns.uppercase)
+    if name then return Var_uppercase(name, idx, all) end
     -- Lower case
-    local name, all = expr:match(patterns.lowercase)
-    if name then return Var_lowercase(name, all) end
+    local name, idx, all = expr:match(patterns.lowercase)
+    if name then return Var_lowercase(name, idx, all) end
     -- Substring replacement
-    local name, all, old, new = expr:match(patterns.replace)
-    if name then return Var_replace(name, old, new, all) end
+    local name, idx, all, old, new = expr:match(patterns.replace)
+    if name then return Var_replace(name, idx, old, new, all) end
 
     return os.getenv(expr)  -- expression is a variable name
 end
