@@ -25,6 +25,7 @@ local testcases = {
     ["unset:-default"] = "default",
     ["unset:-with space"] = "with space",
     -- other cases
+    ["string"] = "01234567890abcdefgh",  -- value as is
     ["string:+100"] = "100",  -- if defined
     ["#string"] = 19,  -- length
     ["string#01234567890"] = "abcdefgh",  -- remove prefix
@@ -37,6 +38,7 @@ local testcases = {
     ["string//0/o"] = "o123456789oabcdefgh",  -- replace all
     ["string//%d/*"] = "***********abcdefgh",  -- replace all using Lua pattern
     -- arrays
+    ["arr[1]"] = "456",  -- array element
     ["arr[2]:1:2"] = "bc",  -- substring
     ["arr[4]:-100"] = "100",  -- default
     ["arr[1]:+100"] = "100",  -- if defined

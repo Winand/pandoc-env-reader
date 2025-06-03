@@ -5,6 +5,7 @@
 
 local name = "([%w_]-)%[?(-?%d*)%]?"  -- VAR or VAR[0]
 local patterns = {
+    variable = "^"..name.."$",  -- VAR or VAR[0]
     default = "^"..name..":%-(.+)$",
     if_defined = "^"..name..":%+(.+)$",
     substring = "^"..name..":%s*(-?%d*):?%s*(-?%d*)$",
@@ -140,7 +141,8 @@ function replace_var(expr)
     local name, idx, all, old, new = expr:match(patterns.replace)
     if name then return Var_replace(name, idx, old, new, all) end
 
-    return os.getenv(expr)  -- expression is a variable name
+    local name, idx = expr:match(patterns.variable)
+    return getenv(name, idx)  -- expression is a variable name
 end
 
 local function replace_vars(text)
