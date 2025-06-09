@@ -2,10 +2,15 @@
     Bash Shell Parameter Expansion
     https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#Shell-Parameter-Expansion
 
-    Set environment variables before running tests:
-    $env:string="01234567890abcdefgh"
-    $env:arr=123, 456, "abcd", "EFGHe"
+    Set environment variables from test.env before running tests.
 ]]
+
+
+function Meta(meta)
+  -- pandoc filter which prints versions and exits
+  print("\nEnvironment: pandoc " .. tostring(PANDOC_VERSION) .. ", " .. _VERSION .. ", " .. lpeg.version)
+  os.exit(1)
+end
 
 dofile("reader-env-vars.lua")
 
