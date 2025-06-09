@@ -1,4 +1,4 @@
 ﻿.vscode
 pandoc-theme
 docker-compose.yml
-output.docx
+output.md
