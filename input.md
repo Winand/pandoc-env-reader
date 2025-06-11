@@ -19,3 +19,4 @@ It also supports some of the Bash features:
 - Upper case: {{inline^}} (first letter), {{inline^^}} (all)
 - Lower case: {{name,}} (first letter), {{name,,}} (all)
 - Replace substring: {{inline/'/"}} (first), {{inline//'/"}} (all)
+- Recursive resolution of variables: {{type:{{#name}}}}, {{UNSET:-{{name/y/w}}}}

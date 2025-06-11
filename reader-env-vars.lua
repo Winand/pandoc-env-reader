@@ -3,6 +3,10 @@
     Lua string utils https://gist.github.com/kgriffs/124aae3ac80eefe57199451b823c24ec
 ]]
 
+local grammar = re.compile[[
+    braces <- '{{' {content*} '}}'
+    content <- (!'{{' !'}}' .)+ / braces
+]]
 local name = "([%w_]-)%[?(-?%d*)%]?"  -- VAR or VAR[0]
 local patterns = {
     variable = "^"..name.."$",  -- VAR or VAR[0]
@@ -145,11 +149,13 @@ function replace_var(expr)
     if name then return getenv(name, idx) end
 end
 
-local function replace_vars(text)
-    -- Replace all template fields in a string
-    return text:gsub("{{(.-)}}", function(expr)
+function replace_vars(text)
+    -- Recursively replace all template fields in a string
+    local function replace_recursive(text)
+        local expr = re.gsub(text, grammar, replace_recursive)
         return replace_var(expr) or ("{{!!" .. expr .. "}}")
-    end)
+    end
+    return re.gsub(text, grammar, replace_recursive)
 end
 
 function Reader(input, reader_options)
