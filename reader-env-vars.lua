@@ -140,9 +140,9 @@ function replace_var(expr)
     -- Substring replacement
     local name, idx, all, old, new = expr:match(patterns.replace)
     if name then return Var_replace(name, idx, old, new, all) end
-
+    -- Expression is a variable name
     local name, idx = expr:match(patterns.variable)
-    return getenv(name, idx)  -- expression is a variable name
+    if name then return getenv(name, idx) end
 end
 
 local function replace_vars(text)
