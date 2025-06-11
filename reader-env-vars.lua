@@ -154,6 +154,8 @@ end
 
 function Reader(input, reader_options)
     -- input is a table of objects with attributes .name and .text
+    a = os.clock()
     input = replace_vars(tostring(input))
+    print("Variables resolved in " .. os.clock() - a .. "s")
     return pandoc.read(input, "markdown", reader_options)
 end
