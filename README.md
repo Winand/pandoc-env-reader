@@ -6,7 +6,7 @@ The reader should be specified in `--from` argument:
 ```powershell
 docker run --rm -i -v "$(pwd):/data" `
     -e name=Andrey -e type=Markdown -e "inline=print('Me')" `
-    pandoc/minimal:3.8 input.md --from=reader-env-vars.lua --output output.docx
+    pandoc/minimal:3.8 input.md input.typ --from=reader-env-vars.lua --output output.docx
 ```
 
 It supports combining multiple input files. File format is determined by the extension of each input file.
