@@ -158,10 +158,42 @@ function replace_vars(text)
     return re.gsub(text, grammar, replace_recursive)
 end
 
+Extensions = {}
+local _, input_formats, _ = pandoc.system.command("pandoc", {"--list-input-formats"})
+for fmt in input_formats:gmatch("[^\r\n]+") do
+    Extensions[fmt] = false
+end
+
 function Reader(input, reader_options)
     -- input is a table of objects with attributes .name and .text
-    a = os.clock()
-    input = replace_vars(tostring(input))
-    print("Variables resolved in " .. os.clock() - a .. "s")
-    return pandoc.read(input, "markdown", reader_options)
+    local specified_format
+    if #reader_options.extensions == 1 then
+        specified_format = reader_options.extensions[1]
+    elseif #reader_options.extensions > 1 then
+        error("Exactly one format extension may be specified, but specified: " ..
+              table.concat(reader_options.extensions, ", "))
+    end
+
+    local docs = {}
+    for i, file in ipairs(input) do  -- ipairs iterates table elements in order
+        format = specified_format or pandoc.format.from_path(file.name) or "markdown"
+        local a = os.clock()
+        local text = replace_vars(file.text)
+        print(string.format("%d %s (%s): variables resolved in %.6fs",
+                            i, file.name, format, os.clock() - a))
+        table.insert(docs,
+            pandoc.read(text, format, reader_options)
+        )
+    end
+
+    if #docs == 1 then return docs[1] end
+
+    local combined_doc = pandoc.Pandoc({})
+    for _, doc in ipairs(docs) do
+        combined_doc.blocks:extend(doc.blocks)
+        for k, v in pairs(doc.meta) do
+            combined_doc.meta[k] = v
+        end
+    end
+    return combined_doc
 end
