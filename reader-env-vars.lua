@@ -32,10 +32,16 @@ local function getenv(name, index)
     assert(index, "index is not an integer")
 
     local i = 0
+    local items = {}  -- temp table for negative indexing
     for item in val:gmatch("%S+") do
-        if i == index then return item end
+        if index < 0 then
+            table.insert(items, item)
+        elseif i == index then
+            return item
+        end
         i = i + 1
     end
+    if index < 0 then return items[1 + #items + index] end
 end
 
 local function Var_default(name, index, default)

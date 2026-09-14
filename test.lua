@@ -45,6 +45,8 @@ local testcases = {
     ["var1"] = "hello",  -- variable with a numerical suffix
     -- arrays
     ["arr[1]"] = "456",  -- array element
+    ["arr[-1]"] = "EFGHe", ["arr[-3]"] = "456",  -- negative indexing
+    ["arr[-5]"] = nil, ["arr[4]"] = nil,  -- out of bounds
     ["arr[2]:1:2"] = "bc",  -- substring
     ["arr[4]:-100"] = "100",  -- default
     ["arr[1]:+100"] = "100",  -- if defined
