@@ -42,6 +42,7 @@ local testcases = {
     ["string/%a+/<letters>"] = "01234567890<letters>",  -- replace using Lua pattern
     ["string//0/o"] = "o123456789oabcdefgh",  -- replace all
     ["string//%d/*"] = "***********abcdefgh",  -- replace all using Lua pattern
+    ["var1"] = "hello",  -- variable with a numerical suffix
     -- arrays
     ["arr[1]"] = "456",  -- array element
     ["arr[2]:1:2"] = "bc",  -- substring

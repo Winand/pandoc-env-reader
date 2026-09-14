@@ -7,7 +7,7 @@ local grammar = re.compile[[
     braces <- '{{' {content*} '}}'
     content <- (!'{{' !'}}' .)+ / braces
 ]]
-local name = "([%w_]-)%[?(-?%d*)%]?"  -- VAR or VAR[0]
+local name = "([%w_]+)%[?(-?%d*)%]?"  -- VAR or VAR[0]
 local patterns = {
     variable = "^"..name.."$",  -- VAR or VAR[0]
     default = "^"..name..":%-(.+)$",
