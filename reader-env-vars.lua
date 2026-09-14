@@ -8,10 +8,15 @@ local grammar = re.compile[[
     content <- (!'{{' !'}}' .)+ / braces
 ]]
 local name = "([%w_]+)%[?(-?%d*)%]?"  -- VAR or VAR[0]
+local opt_name = "([%w_]*)%[?(-?%d*)%]?"  -- VAR or VAR[0]
+local cmp_chars = "[=!<>~]"
 local patterns = {
     variable = "^"..name.."$",  -- VAR or VAR[0]
     default = "^"..name..":%-(.+)$",
-    if_defined = "^"..name..":%+(.+)$",
+    -- Condition: {{VAR="literal":+text}} (comparison with a literal)
+    if_condition_lit = "^"..name..'%s*('..cmp_chars..'*)%s*"(.-)"%s*:%+(.+)$',
+    -- Condition: {{VAR:+text}} (defined), {{VAR=RHS:+text}} (comparison with a variable)
+    if_condition = "^"..name.."%s*("..cmp_chars.."*)%s*"..opt_name.."%s*:%+(.+)$",
     substring = "^"..name..":%s*(-?%d*):?%s*(-?%d*)$",
     length = "^#"..name.."$",
     prefix = "^"..name.."#(.+)$",
@@ -20,6 +25,29 @@ local patterns = {
     lowercase = "^"..name..",(,?)$",
     replace = "^"..name.."/(/?)(.-)/(.+)$",
 }
+
+-- Comparators available to the `if_condition` / `if_not_condition`
+-- conditionals. Numeric operators fall back to plain string comparison
+-- when either side isn't a number, so they also work on text values.
+-- Add entries here (and, if needed, new operator characters to the
+-- `[=!<>]*` class above) to support more comparisons.
+local function try_numeric(a, b)
+    local na, nb = tonumber(a), tonumber(b)
+    if na and nb then return na, nb end
+    return a, b
+end
+
+local comparators = {
+    ["=="]  = function(a, b) return a == b end,
+    ["!="] = function(a, b) return a ~= b end,
+    ["<"]  = function(a, b) local x, y = try_numeric(a, b); return x < y end,
+    [">"]  = function(a, b) local x, y = try_numeric(a, b); return x > y end,
+    ["<="] = function(a, b) local x, y = try_numeric(a, b); return x <= y end,
+    [">="] = function(a, b) local x, y = try_numeric(a, b); return x >= y end,
+}
+-- Aliases for comparators
+comparators["="] = comparators["=="]
+comparators["~="] = comparators["!="]
 
 local function getenv(name, index)
     -- get environment variable by name
@@ -51,9 +79,23 @@ local function Var_default(name, index, default)
     return val
 end
 
-local function Var_if_defined(name, index, value)
-    -- Return a specified value if a variable is defined
-    if getenv(name, index) then return value end
+local function compare(lhs, op, rhs)
+    local cmp = comparators[op]
+    if cmp == nil then error("Comparator '"..op.."' not supported") end
+    return cmp(lhs, rhs)
+end
+
+local function Var_if_condition(name, index, op, lit, text)
+    -- {{VAR:+text}}     -> text if VAR is defined, else ""
+    -- {{VAR=RHS:+text}} -> text if VAR matches RHS, else ""
+    local lhs_val = getenv(name, index)
+    if op == "" then  -- var defined
+        if lhs_val then return text end
+        return ""
+    end
+    if compare(lhs_val, op, lit) then
+        return text
+    end
     return ""
 end
 
@@ -126,9 +168,13 @@ function replace_var(expr)
     -- Default value (!! should go earlier than a substring match)
     local name, idx, default = expr:match(patterns.default)
     if name then return Var_default(name, idx, default) end
-    -- Return a specified value if a variable is defined
-    local name, idx, value = expr:match(patterns.if_defined)
-    if name then return Var_if_defined(name, idx, value) end
+    -- Return a specified value if a var is defined or an optional
+    -- comparison with variable or literal is true: {{VAR:+text}} or {{VAR=RHS:+text}}
+    local name, idx, op, lit, text = expr:match(patterns.if_condition_lit)
+    if name then return Var_if_condition(name, idx, op, lit, text) end
+    local name, idx, op, rhs, rhs_idx, text = expr:match(patterns.if_condition)
+    if (rhs) then lit = getenv(rhs, rhs_idx) end  -- resolve RHS value
+    if name then return Var_if_condition(name, idx, op, lit, text) end
     -- Substring Expansion
     local name, idx, offset, length = expr:match(patterns.substring)
     if name then return Var_substring(name, idx, offset, length) end

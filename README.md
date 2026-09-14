@@ -14,10 +14,11 @@ It supports combining multiple input files. File format is determined by the ext
 Common input format can be specified via reader extension: `--from=reader-env-vars.lua+markdown`.
 Default format for data read from _stdin_ is Markdown.
 
-The reader also supports a subset of the Bash parameter expansion features:
+The reader also supports a subset of the Bash parameter expansion features and additional features:
 - default value: `{{UNSET:-default val}}`
 - if defined: `{{defined:+value}}`
+- simple conditionals (eq, ne, gt, ge, le, lt): `{{name="John":+value}}`, `{{name!=name2:+value}}`
 - substring: `{{name:3:5}}`
 - substring replacement: `{{string//%d/*}}` (supports Lua patterns)
-- array indexing: `{{array[1]}}`
+- array indexing: `{{array[1]}}`, `{{array[-2]}}`
 - length, prefix/suffix removal, upper/lower case conversion (see also _input.md_)

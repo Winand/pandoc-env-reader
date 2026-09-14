@@ -1,5 +1,5 @@
 # Hello, {{name}}
-This is a test {{type}} file.
+{{type="Markdown":+This is a test {{type}} file.}}
 
 It allows to substitute variables in `inline code like this: {{inline}}`
 and in code blocks:

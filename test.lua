@@ -32,6 +32,7 @@ local testcases = {
     -- other cases
     ["string"] = "01234567890abcdefgh",  -- value as is
     ["string:+100"] = "100",  -- if defined
+    ['num>"455":+long\nlong\ntext'] = "long\nlong\ntext",  -- gt condition
     ["#string"] = 19,  -- length
     ["string#01234567890"] = "abcdefgh",  -- remove prefix
     ["string#%d+"] = "abcdefgh",  -- remove prefix using Lua pattern
@@ -43,6 +44,7 @@ local testcases = {
     ["string//0/o"] = "o123456789oabcdefgh",  -- replace all
     ["string//%d/*"] = "***********abcdefgh",  -- replace all using Lua pattern
     ["var1"] = "hello",  -- variable with a numerical suffix
+    ['reserved==":+":+works'] = "works",  -- literal with reserved characters
     -- arrays
     ["arr[1]"] = "456",  -- array element
     ["arr[-1]"] = "EFGHe", ["arr[-3]"] = "456",  -- negative indexing
@@ -50,6 +52,8 @@ local testcases = {
     ["arr[2]:1:2"] = "bc",  -- substring
     ["arr[4]:-100"] = "100",  -- default
     ["arr[1]:+100"] = "100",  -- if defined
+    ['arr[0]=="123":+101'] = "101",  -- eq condition with literal RHS
+    ['arr[1] = num:+101'] = "101",  -- eq condition
     ["#arr[0]"] = 3,  -- length
     ["#arr"] = 18,  -- array is a space-separated string
     ["arr[2]#ab"] = "cd",  -- remove prefix
