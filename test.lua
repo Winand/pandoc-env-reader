@@ -15,6 +15,7 @@ end
 dofile("reader-env-vars.lua")
 
 
+local NIL = {}
 local testcases = {
     -- substring
     ["string:7"] = "7890abcdefgh",
@@ -48,7 +49,7 @@ local testcases = {
     -- arrays
     ["arr[1]"] = "456",  -- array element
     ["arr[-1]"] = "EFGHe", ["arr[-3]"] = "456",  -- negative indexing
-    ["arr[-5]"] = nil, ["arr[4]"] = nil,  -- out of bounds
+    ["arr[-5]"] = NIL, ["arr[4]"] = NIL,  -- out of bounds
     ["arr[2]:1:2"] = "bc",  -- substring
     ["arr[4]:-100"] = "100",  -- default
     ["arr[1]:+100"] = "100",  -- if defined
@@ -66,10 +67,18 @@ local testcases = {
     ["arr[3]//[eE]/.."] = "..FGH..",  -- replace all using Lua pattern
 }
 
+local function repr(v)
+  if type(v) == "string" then
+    return string.format("%q", v)
+  end
+  return tostring(v)
+end
+
 for expr, expected in pairs(testcases) do
+    if expected == NIL then expected = nil end
     local result = replace_var(expr)
-    assert(result == expected, "Expected '" .. expected .. "' for '" .. expr ..
-                               "', got '" .. tostring(result) .. "'")
+    assert(result == expected, "Expected " .. repr(expected) .. " for '" .. expr ..
+                               "', got " .. repr(result))
 end
 
 print("All tests passed.")
