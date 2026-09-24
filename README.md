@@ -21,4 +21,5 @@ The reader also supports a subset of the Bash parameter expansion features and a
 - substring: `{{name:3:5}}`
 - substring replacement: `{{string//%d/*}}` (supports Lua patterns)
 - array indexing: `{{array[1]}}`, `{{array[-2]}}`
+- assignment: `{{var="value"}}`, `{{var:="value"}}` (set and return)
 - length, prefix/suffix removal, upper/lower case conversion (see also _input.md_)

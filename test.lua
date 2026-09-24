@@ -46,6 +46,9 @@ local testcases = {
     ["string//%d/*"] = "***********abcdefgh",  -- replace all using Lua pattern
     ["var1"] = "hello",  -- variable with a numerical suffix
     ['reserved==":+":+works'] = "works",  -- literal with reserved characters
+    ['var2 = "new_val"'] = "",  -- set variable and remove field
+    ['var2 := "new_val"'] = "new_val",  -- set variable and return value
+    ['arr2[9] = "new_val"'] = NIL,  -- cannot change arrays
     -- arrays
     ["arr[1]"] = "456",  -- array element
     ["arr[-1]"] = "EFGHe", ["arr[-3]"] = "456",  -- negative indexing

@@ -12,6 +12,7 @@ local opt_name = "([%w_]*)%[?(-?%d*)%]?"  -- VAR or VAR[0]
 local cmp_chars = "[=!<>~]"
 local patterns = {
     variable = "^"..name.."$",  -- VAR or VAR[0]
+    assign = "^"..name..'%s*(:?)=%s*"(.-)"$',
     default = "^"..name..":%-(.+)$",
     -- Condition: {{VAR="literal":+text}} (comparison with a literal)
     if_condition_lit = "^"..name..'%s*('..cmp_chars..'*)%s*"(.-)"%s*:%+(.+)$',
@@ -25,6 +26,7 @@ local patterns = {
     lowercase = "^"..name..",(,?)$",
     replace = "^"..name.."/(/?)(.-)/(.+)$",
 }
+local env_overrides = {}
 
 -- Comparators available to the `if_condition` / `if_not_condition`
 -- conditionals. Numeric operators fall back to plain string comparison
@@ -52,7 +54,7 @@ comparators["~="] = comparators["!="]
 local function getenv(name, index)
     -- get environment variable by name
     -- supports space separated arrays
-    local val = os.getenv(name)
+    local val = env_overrides[name] or os.getenv(name)
     if not val then return end
 
     if not index or index == '' then return val end
@@ -162,6 +164,13 @@ local function Var_replace(name, index, old, new, all)
     return (val:gsub(old, new, 1))  -- parentheses force to return only the first value
 end
 
+local function Var_assign(name, value, ret)
+    -- Assing a value to a variable and optionally return it
+    env_overrides[name] = value
+    if ret == ":" then return value end
+    return ""
+end
+
 function replace_var(expr)
     -- Match and replace a single template field
 
@@ -199,6 +208,9 @@ function replace_var(expr)
     -- Expression is a variable name
     local name, idx = expr:match(patterns.variable)
     if name then return getenv(name, idx) end
+    -- Set or update a variable
+    local name, idx, ret, lit = expr:match(patterns.assign)
+    if (name and idx == "") then return Var_assign(name, lit, ret) end
 end
 
 function replace_vars(text)
