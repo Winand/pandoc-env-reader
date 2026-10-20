@@ -223,24 +223,33 @@ function replace_vars(text)
 end
 
 Extensions = {}
-local _, input_formats, _ = pandoc.system.command("pandoc", {"--list-input-formats"})
-for fmt in input_formats:gmatch("[^\r\n]+") do
+local input_formats = {}  -- all available input formats
+local _, _input_formats, _ = pandoc.system.command("pandoc", {"--list-input-formats"})
+for fmt in _input_formats:gmatch("[^\r\n]+") do
     Extensions[fmt] = false
+    input_formats[fmt] = true
+end
+-- Support all available extensions, activate the default ones (see pandoc --list-extensions)
+local _, _extensions, _ = pandoc.system.command("pandoc", {"--list-extensions"})
+for ext_status in _extensions:gmatch("[^\r\n]+") do
+    local enabled, ext = ext_status:match("([%+%-])(.+)")
+    Extensions[ext] = enabled == "+"
 end
 
 function Reader(input, reader_options)
     -- input is a table of objects with attributes .name and .text
     local specified_format
-    if #reader_options.extensions == 1 then
-        specified_format = reader_options.extensions[1]
-    elseif #reader_options.extensions > 1 then
-        error("Exactly one format extension may be specified, but specified: " ..
-              table.concat(reader_options.extensions, ", "))
+    for i, ext in ipairs(reader_options.extensions) do
+        if input_formats[ext] then --input format found in the extension list
+            specified_format = ext
+            table.remove(reader_options.extensions, i)
+            break
+        end
     end
 
     local docs = {}
     for i, file in ipairs(input) do  -- ipairs iterates table elements in order
-        format = specified_format or pandoc.format.from_path(file.name) or "markdown"
+        local format = specified_format or pandoc.format.from_path(file.name) or "markdown"
         local a = os.clock()
         local text = replace_vars(file.text)
         print(string.format("%d %s (%s): variables resolved in %.6fs",
